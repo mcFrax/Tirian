@@ -1,0 +1,6 @@
+#ifndef _WIDGETS_
+#define _WIDGETS_
+
+#include <widgets.hpp>
+
+#endif //_WIDGETS_HPP_

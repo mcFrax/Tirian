@@ -1,0 +1,57 @@
+//~ 
+#ifdef LOG_TIME
+	#ifdef LOG_FULL
+		#define LOG( x ) \
+			do {	\
+			printf( "[%u] "__FILE__":%i:%s:\n  ", static_cast<Uint32>( time(0) ), __LINE__, __PRETTY_FUNCTION__ );	\
+			printf x;	\
+			} while(0)
+		#define CLOG	\
+			std::clog << '[' << time( 0 ) << "] " << __FILE__":" << __LINE__ << ": "__PRETTY_FUNCTION__":\n  "
+	#else
+		#ifdef LOG_PRETTY
+			#define LOG( x ) \
+				do {	\
+				printf( "[%u] %s:\n  ", static_cast<Uint32>( time(0) ), __PRETTY_FUNCTION__ );	\
+				printf x;	\
+				} while(0)
+			#define CLOG	\
+				std::clog << '[' << time( 0 ) << "] " << __PRETTY_FUNCTION__":\n  "
+		#else
+			#define LOG( x ) \
+				do {	\
+				printf( "[%u] %s: ", static_cast<Uint32>( time(0) ), __FUNCTION__ );	\
+				printf x;	\
+				} while(0)
+			#define CLOG	\
+				std::clog << '[' << time( 0 ) << "] " << __FUNCTION__": "
+		#endif
+#else
+	#ifdef LOG_FULL
+		#define LOG( x ) \
+			do {	\
+			printf( __FILE__":%i:%s:\n  ", __LINE__, __PRETTY_FUNCTION__ );	\
+			printf x;	\
+			} while(0)
+		#define CLOG	\
+			std::clog << __FILE__":" << __LINE__ << ": "__PRETTY_FUNCTION__":\n  "
+	#else
+		#ifdef LOG_PRETTY
+			#define LOG( x ) \
+				do {	\
+				printf( "%s:\n  ", __PRETTY_FUNCTION__ );	\
+				printf x;	\
+				} while(0)
+			#define CLOG	\
+				std::clog << __PRETTY_FUNCTION__":\n  "
+		#else
+			#define LOG( x ) \
+				do {	\
+				printf( "%s: ", __FUNCTION__ );	\
+				printf x;	\
+				} while(0)
+			#define CLOG	\
+				std::clog << __FUNCTION__": "
+		#endif
+#endif
+//~ //

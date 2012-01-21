@@ -1,0 +1,8 @@
+/*!\mainpage Tirian widget engine
+ * 
+ * \brief \image html "Tirian.jpg" Uniwersalny silnik zarządzania widgetami, oparty o SDL i OpenGl.
+ * 
+ * \author Franciszek "Frax" Boehlke
+ * 
+ * \version 0.1.0 alpha
+ */
