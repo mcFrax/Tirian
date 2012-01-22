@@ -20,13 +20,13 @@ class Label : public Widget
 		};
 	private:
 		std::string Caption;
-		SDLFontRenderer * Font;
+		FontRenderer * Font;
 		VerticalTextPos vertTextPos;
 		HorizontalTextPos horTextPos;
 	protected:
 		void onDraw();
 	public:
-		Label( const std::string& name, Widget* new_parent, long left, long top, long width, long height, SDLFontRenderer * font, const std::string& caption );
+		Label( const std::string& name, Widget* new_parent, long left, long top, long width, long height, FontRenderer * font, const std::string& caption );
 		
 		const std::string& caption() const { return Caption; }
 		void setCaption( const std::string& c ) { Caption = c; if ( isVisible() ) Engine::Redraw(); }
@@ -36,8 +36,8 @@ class Label : public Widget
 		void setVertTextPos( VerticalTextPos vp ) { vertTextPos = vp; if ( isVisible() ) Engine::Redraw(); }
 		void setHorTextPos( HorizontalTextPos hp ) { horTextPos = hp; if ( isVisible() ) Engine::Redraw(); }
 		
-		SDLFontRenderer * getFont() { return Font; }
-		void setFont( SDLFontRenderer * f ) { Font = f; if ( isVisible() ) Engine::Redraw(); }
+		FontRenderer * getFont() { return Font; }
+		void setFont( FontRenderer * f ) { Font = f; if ( isVisible() ) Engine::Redraw(); }
 };
 
 class Button : public Widget

@@ -2,7 +2,7 @@
 
 static const float BUTTON_BORDER = 3.0f;
 
-Label::Label( const std::string& name, Widget* new_parent, long left, long top, long width, long height, SDLFontRenderer * font, const std::string& caption )
+Label::Label( const std::string& name, Widget* new_parent, long left, long top, long width, long height, FontRenderer * font, const std::string& caption )
 	: Widget( name, new_parent, left, top, width, height ), Caption( caption ), Font( font ), vertTextPos( vpTop ), horTextPos( hpLeft )
 {
 }

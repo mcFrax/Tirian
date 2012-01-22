@@ -1,21 +1,23 @@
 #include <fontrenderer.hpp>
 
-SDLFontRenderer::SDLFontRenderer() : font( 0 )
+FontRenderer::FontRenderer()
 {
+    font = 0;
 	for ( int i = 0; i < 4; i++ ) color[ i ] = 1.0f;
 }
 
-SDLFontRenderer::SDLFontRenderer( TTF_Font * _font, const bool useMipmaps, const bool blending )
-	: blend( blending ), mipmaps( useMipmaps ), font( _font )
+SDLFontRenderer::SDLFontRenderer()
 {
-	if ( !font )
-		throw std::logic_error( "#SDLFontRenderer: Font is null" );
-	h = TTF_FontHeight( font );
-	ls = TTF_FontLineSkip( font );
-	for ( int i = 0; i < 4; i++ ) color[ i ] = 1.0f;
 }
 
-void SDLFontRenderer::set( TTF_Font * _font, const bool useMipmaps, const bool blending )
+SDLFontRenderer::SDLFontRenderer( TTF_Font * _font, const bool useMipmaps,
+        const bool blending )
+{
+    set(_font, useMipmaps, blending);
+}
+
+void SDLFontRenderer::set( TTF_Font * _font, const bool useMipmaps,
+        const bool blending )
 {
 	font = _font; mipmaps = useMipmaps; blend = blending;
 	if ( !font )
@@ -78,11 +80,6 @@ void SDLFontRenderer::setGLflags()
 	glEnable( GL_BLEND );
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	GLTERRORCHECK;
-}
-
-void SDLFontRenderer::render( std::string s, float x, float y )
-{
-	render( s, x, y, h );
 }
 
 void SDLFontRenderer::render( std::string s, float x, float y, float height )

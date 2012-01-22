@@ -4,7 +4,7 @@ CFLAGS = $(CXXFLAGS) -O3 -Wall -I$(IDIR)
 LDFLAGS = -lSDL -lGL -lGLU -lm -lSDL_ttf -lSDL_image -L . -lTirian 
 OBJDIR = Obj/
 IDIR = Include/
-OBJ = $(OBJDIR)texture.o $(OBJDIR)fontrenderer.o $(OBJDIR)widget.o $(OBJDIR)interface.o $(OBJDIR)engine.o $(OBJDIR)widgets.o
+OBJ = $(OBJDIR)texture.o $(OBJDIR)fontrenderer.o $(OBJDIR)mono_fontrenderer.o $(OBJDIR)widget.o $(OBJDIR)interface.o $(OBJDIR)engine.o $(OBJDIR)widgets.o
 DEP = $(IDIR)gl.hpp $(IDIR)logging.hpp $(IDIR)except.hpp 
 
 everything: all Docs
@@ -25,6 +25,9 @@ libTirian.a: $(OBJ)
 	
 $(OBJDIR)texture.o:  texture.cpp $(IDIR)texture.hpp $(DEP)
 	$(CXX) -c texture.cpp -o $(OBJDIR)texture.o $(CFLAGS)
+	
+$(OBJDIR)mono_fontrenderer.o:  mono_fontrenderer.cpp $(IDIR)mono_fontrenderer.hpp $(IDIR)texture.hpp $(DEP)
+	$(CXX) -c mono_fontrenderer.cpp -o $(OBJDIR)mono_fontrenderer.o $(CFLAGS)
 	
 $(OBJDIR)fontrenderer.o:  fontrenderer.cpp $(IDIR)fontrenderer.hpp $(IDIR)texture.hpp $(DEP)
 	$(CXX) -c fontrenderer.cpp -o $(OBJDIR)fontrenderer.o $(CFLAGS)

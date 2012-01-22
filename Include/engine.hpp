@@ -4,7 +4,7 @@
 #include <interface.hpp>
 #include <logging.hpp>
 #include <except.hpp>
-#include <fontrenderer.hpp>
+#include <mono_fontrenderer.hpp>
 #include <gl.hpp>
 #include <queue>
 #include <memory>
@@ -51,7 +51,8 @@ class Engine
 		static Uint32 videoModeFlags;
 		static const SDL_VideoInfo* video;
 	public:
-		static SDLFontRenderer * defFont;
+		//static SDLFontRenderer * defFont;
+		static FontRenderer * defFont;
 		static const char TirianVersion[];
 		static const char DefaultIconPath[];
 		static const char DefaultCaption[];

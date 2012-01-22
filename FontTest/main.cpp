@@ -16,17 +16,17 @@ class Label2 : public Widget
 {
 	private:
 		std::string Caption;
-		SDLFontRenderer * Font;
+		FontRenderer * Font;
 	protected:
 		void onDraw();
 	public:
-		Label2( const std::string& name, Widget* new_parent, long left, long top, long width, long height, SDLFontRenderer * font, const std::string& caption );
+		Label2( const std::string& name, Widget* new_parent, long left, long top, long width, long height, FontRenderer * font, const std::string& caption );
 		
 		const std::string& caption() const { return Caption; }
 		void setCaption( const std::string& c ) { Caption = c; if ( isVisible() ) Engine::Redraw(); }
 };
 
-Label2::Label2( const std::string& name, Widget* new_parent, long left, long top, long width, long height, SDLFontRenderer * font, const std::string& caption )
+Label2::Label2( const std::string& name, Widget* new_parent, long left, long top, long width, long height, FontRenderer * font, const std::string& caption )
 	: Widget( name, new_parent, left, top, width, height ), Caption( caption ), Font( font )
 {
 }
@@ -90,7 +90,7 @@ void reset()
 	printf( "reset\n" );
 }
 
-void ccb1( Widget& sender, const MouseButtonEvent& mbe )
+void ccb1( Widget* sender, const MouseButtonEvent& mbe )
 {
 	for ( int i = 0; i < ILE; ++i ){
 		l1[i] -> setVisible( 1 );
@@ -99,7 +99,7 @@ void ccb1( Widget& sender, const MouseButtonEvent& mbe )
 	reset();
 }
 
-void ccb2( Widget& sender, const MouseButtonEvent& mbe )
+void ccb2( Widget* sender, const MouseButtonEvent& mbe )
 {
 	for ( int i = 0; i < ILE; ++i ){
 		l1[i] -> setVisible( 0 );
@@ -109,7 +109,7 @@ void ccb2( Widget& sender, const MouseButtonEvent& mbe )
 }
 
 static const uint D = 2000;
-void icb( Widget& sender )
+void icb( Widget* sender )
 {
 	if ( SDL_GetTicks() - lastPrint >= D ){
 		lastPrint += D;
@@ -129,12 +129,13 @@ int main( int argc, char ** argv )
 	Engine::window().idleCallback = icb;
 	
 	for ( int i = 0; i < ILE; ++i ){
-		l1[i] = new Label( "L", f, 10, 10, 900, 20, Engine::defFont, "AbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyz" );
-		l2[i] = new Label2( "L2", f, 10, 40, 900, 20, Engine::defFont, "AbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyz" );
+		l1[i] = new Label( "L", f, 10, 10, 900, 40, Engine::defFont, "A b c d e f g h i j k l m n o p q r s t u v w x y z" );
+		l2[i] = new Label2( "L2", f, 10, 40, 900, 40, Engine::defFont, "A b c d e f g h i j k l m n o p q r s t u v w x y z"/*"Abcdefghijklmnopqrstuvwxyz"*/ );
 	}
 	
-	( new Button( "1", f, 10, 70, 100, 24 ) ) -> clickCallback = ccb1;
-	( new Button( "2", f, 110, 70, 100, 24 ) ) -> clickCallback = ccb2;
+	( new Button( "AAA", f, 10, 70, 120, 32 ) ) -> clickCallback = ccb1;
+	( new Button( "BBB", f, 110, 70, 120, 32 ) ) -> clickCallback = ccb2;
+	( new Button( "A b c d e f g h i j k l m n o p q r s t u v w x y z", f, 110, 120, 900, 50 ) );
 	
 	t = SDL_GetTicks();
 	engine.MainLoop();

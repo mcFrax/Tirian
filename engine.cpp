@@ -12,15 +12,16 @@ bool Engine::quit = 0;
 bool Engine::redraw = 0;
 Window* Engine::window_ptr = 0;
 std::priority_queue<Engine::Event*, std::vector<Engine::Event*>, Engine::ECmp> Engine::eventQueue;
-SDLFontRenderer * Engine::defFont = 0;
+FontRenderer * Engine::defFont = 0;
 Uint32 Engine::videoModeFlags = 0;
 const SDL_VideoInfo* Engine::video = 0;
 
 const char Engine::TirianVersion[] = "0.1.2 alpha";
-const char Engine::DefaultIconPath[] = "/home/frax/Programowanie/GalViewer/Tirian.png";
+const char Engine::DefaultIconPath[] = "/home/frax/Programowanie/Tirian/Tirian.png";
 const char Engine::DefaultCaption[] = "Tirian application";
-const char Engine::DefaultFontPath[] = "/usr/share/fonts/truetype/freefont/FreeSans.ttf";
-const int Engine::DefaultFontTextureHeight = 12;
+const char Engine::DefaultFontPath[] = "/usr/share/fonts/truetype/freefont/FreeMono.ttf";
+//"/usr/share/fonts/truetype/freefont/FreeSans.ttf";
+const int Engine::DefaultFontTextureHeight = 20;
 const int Engine::DefaultFontHeight = 14;
 
 float Engine::backgroundColor[3] = { 0x4C/255.0f, 0x40/255.0f, 0x39/255.0f };//{ 0.5f, 0.5f, 0.5f };	//#4C4039
@@ -74,10 +75,6 @@ Engine::Engine( int argc, char** argv, Uint16 width, Uint16 height, const char* 
 		TTF_Init();
 		
 		LOG(( "SDL_ttf initialized\n" ));
-				
-		defFont = new SDLFontRenderer( TTF_OpenFont( DefaultFontPath, DefaultFontTextureHeight ), 1, 1 );
-		
-		LOG(( "Default font loaded from \"%s\"\n", DefaultFontPath ));
 		
 		SDL_Surface * ico = (icon) ? IMG_Load( icon ) : 0;
 		
@@ -129,6 +126,11 @@ Engine::Engine( int argc, char** argv, Uint16 width, Uint16 height, const char* 
 		LOG(( "Video mode set\n" ));
 		
 		printGLVersion();
+				
+        //defFont = new SDLFontRenderer( TTF_OpenFont( DefaultFontPath, DefaultFontTextureHeight ), 1, 1 );
+		defFont = new MonoFontRenderer( TTF_OpenFont( DefaultFontPath, DefaultFontTextureHeight ), 1, 1 );
+		
+		LOG(( "Default font loaded from \"%s\"\n", DefaultFontPath ));
 		
 		#warning "Do napisania -> inicjalizacja atrybutów OpenGl'a"
 		
