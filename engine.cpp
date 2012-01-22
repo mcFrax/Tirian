@@ -1,18 +1,27 @@
 #include <engine.hpp>
 #include <widget.hpp>
 
+Uint16 Engine::W = 0;
+Uint16 Engine::H = 0;
+Uint16 Engine::windowW = 0;
+Uint16 Engine::windowH = 0;
+Uint16 Engine::screenW = 0;
+Uint16 Engine::screenH = 0;
 bool Engine::instanceExists = 0;
 bool Engine::quit = 0;
 bool Engine::redraw = 0;
 Window* Engine::window_ptr = 0;
+std::priority_queue<Engine::Event*, std::vector<Engine::Event*>, Engine::ECmp> Engine::eventQueue;
 SDLFontRenderer * Engine::defFont = 0;
+Uint32 Engine::videoModeFlags = 0;
 const SDL_VideoInfo* Engine::video = 0;
 
-const char Engine::TirianVersion[] = "0.2.0 alpha";
+const char Engine::TirianVersion[] = "0.1.2 alpha";
 const char Engine::DefaultIconPath[] = "/home/frax/Programowanie/GalViewer/Tirian.png";
 const char Engine::DefaultCaption[] = "Tirian application";
 const char Engine::DefaultFontPath[] = "/usr/share/fonts/truetype/freefont/FreeSans.ttf";
-const int Engine::DefaultFontHeight = 12;
+const int Engine::DefaultFontTextureHeight = 12;
+const int Engine::DefaultFontHeight = 14;
 
 float Engine::backgroundColor[3] = { 0x4C/255.0f, 0x40/255.0f, 0x39/255.0f };//{ 0.5f, 0.5f, 0.5f };	//#4C4039
 float Engine::activeButtonColor[3] = { 0x4C/255.0f, 0x40/255.0f, 0x39/255.0f };//{ 0.5f, 0.5f, 0.5f };
@@ -66,7 +75,7 @@ Engine::Engine( int argc, char** argv, Uint16 width, Uint16 height, const char* 
 		
 		LOG(( "SDL_ttf initialized\n" ));
 				
-		defFont = new SDLFontRenderer( TTF_OpenFont( DefaultFontPath, DefaultFontHeight ), 1, 1 );
+		defFont = new SDLFontRenderer( TTF_OpenFont( DefaultFontPath, DefaultFontTextureHeight ), 1, 1 );
 		
 		LOG(( "Default font loaded from \"%s\"\n", DefaultFontPath ));
 		
@@ -96,13 +105,15 @@ Engine::Engine( int argc, char** argv, Uint16 width, Uint16 height, const char* 
 			throw MKRE( std::string( "Couldn't get video information :\n" ) += SDL_GetError() );
 		}
 		
-		if ( flags & SDL_FULLSCREEN ){
-			width = video -> current_w;
-			height = video -> current_h;
-		}
+		W = windowW = width;
+		H = windowH = height;
+		screenW = video -> current_w;
+		screenH = video -> current_h;
 		
-		W = width;
-		H = height;
+		if ( flags & SDL_FULLSCREEN ){
+			W = screenW;
+			H = screenH;
+		}
 		
 		SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 5 );
 		SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 5 );
@@ -110,7 +121,8 @@ Engine::Engine( int argc, char** argv, Uint16 width, Uint16 height, const char* 
 		SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
 		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 
-		if( SDL_SetVideoMode( W, H, video->vfmt->BitsPerPixel, SDL_OPENGL | SDL_GL_DOUBLEBUFFER | SDL_RESIZABLE | flags ) == 0 ) {
+		videoModeFlags = flags;
+		if( SDL_SetVideoMode( W, H, video->vfmt->BitsPerPixel, SDL_OPENGL | SDL_GL_DOUBLEBUFFER | SDL_RESIZABLE | videoModeFlags ) == 0 ) {
 			throw MKRE( std::string( "Couldn't set video mode :\n" ) += SDL_GetError() );
 		}
 		
@@ -143,6 +155,26 @@ Engine::~Engine()
 	LOG(( "Engine killed.\n" ));
 }
 
+void Engine::setVideoModeFlags( Uint32 flags )
+{
+	videoModeFlags = flags;
+	if ( videoModeFlags & SDL_FULLSCREEN ){
+		W = screenW;
+		H = screenH;
+	} else {
+		W = windowW;
+		H = windowH;
+	}
+	
+	//~ LOG(( "Resize %i, %i\n", W, H ));
+	SDL_SetVideoMode( W, H, video->vfmt->BitsPerPixel, SDL_OPENGL | SDL_RESIZABLE | videoModeFlags );
+	SDL_ResizeEvent event;
+	event.w = W;
+	event.h = H;
+	window_ptr -> resize( event );
+	Redraw();
+}
+
 void Engine::MainLoop()
 {
 	TRY
@@ -163,6 +195,7 @@ void Engine::MainLoop()
 						break;
 					case SDL_MOUSEBUTTONDOWN :
 					case SDL_MOUSEBUTTONUP :
+						Mouse::setButton( event.button.button, event.button.state == SDL_PRESSED );
 						Mouse::refresh( event.button.x, event.button.y );
 						if ( Widget::getMouseFocus() )
 							Widget::getMouseFocus() -> button( MouseButtonEvent( event.button, Widget::getMouseFocus() -> absLeft(), Widget::getMouseFocus() -> absTop() ) );
@@ -179,7 +212,11 @@ void Engine::MainLoop()
 					case SDL_VIDEORESIZE :
 						W = event.resize.w;
 						H = event.resize.h;
-						SDL_SetVideoMode( W, H, video->vfmt->BitsPerPixel, SDL_OPENGL | SDL_RESIZABLE );
+						if ( !(videoModeFlags & SDL_FULLSCREEN) ){
+							windowW = W;
+							windowH = H;
+						}
+						SDL_SetVideoMode( W, H, video->vfmt->BitsPerPixel, SDL_OPENGL | SDL_RESIZABLE | videoModeFlags );
 						window_ptr -> resize( event.resize );
 						break;
 					case SDL_VIDEOEXPOSE :
@@ -190,6 +227,14 @@ void Engine::MainLoop()
 					default :
 						break;
 				}
+			}
+			
+			Uint32 t = SDL_GetTicks();
+			while ( !eventQueue.empty() && eventQueue.top() -> executionTime <= t ){
+				eventQueue.top() -> execute();
+				#warning delete eventQueue.top(); ( powinien być shared_ptr )
+				delete eventQueue.top();
+				eventQueue.pop();
 			}
 			
 			if ( redraw ){

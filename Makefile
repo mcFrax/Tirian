@@ -4,7 +4,7 @@ CFLAGS = $(CXXFLAGS) -O3 -Wall -I$(IDIR)
 LDFLAGS = -lSDL -lGL -lGLU -lm -lSDL_ttf -lSDL_image -L . -lTirian 
 OBJDIR = Obj/
 IDIR = Include/
-OBJ = $(OBJDIR)texture.o $(OBJDIR)fontrenderer.o $(OBJDIR)widget.o $(OBJDIR)interface.o $(OBJDIR)engine.o $(OBJDIR)widgets.o $(OBJDIR)hash.o
+OBJ = $(OBJDIR)texture.o $(OBJDIR)fontrenderer.o $(OBJDIR)widget.o $(OBJDIR)interface.o $(OBJDIR)engine.o $(OBJDIR)widgets.o
 DEP = $(IDIR)gl.hpp $(IDIR)logging.hpp $(IDIR)except.hpp 
 
 everything: all Docs
@@ -40,6 +40,3 @@ $(OBJDIR)widgets.o:  widgets.cpp $(IDIR)widgets.hpp $(IDIR)widget.hpp
 
 $(OBJDIR)engine.o:  engine.cpp $(IDIR)engine.hpp $(IDIR)widget.hpp
 	$(CXX) -c engine.cpp -o $(OBJDIR)engine.o $(CFLAGS)
-
-$(OBJDIR)hash.o:  hash.cpp $(IDIR)hash.hpp
-	$(CXX) -c hash.cpp -o $(OBJDIR)hash.o $(CFLAGS)

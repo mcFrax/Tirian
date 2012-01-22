@@ -342,7 +342,6 @@ void Texture::loadFromFile( const char *path, bool buildMipmaps )
 		reset();
 		
 		createCounter( 0, path, buildMipmaps );
-		
 		load();
 		
 		if ( logging )

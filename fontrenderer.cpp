@@ -61,6 +61,7 @@ Texture * SDLFontRenderer::make( char c )
 
 void SDLFontRenderer::setGLflags()
 {
+	GLTERRORCHECK;
 	glActiveTexture( GL_TEXTURE1 );
 	glDisable(GL_TEXTURE_2D);
 	
@@ -69,14 +70,14 @@ void SDLFontRenderer::setGLflags()
 	
 	glDisable( GL_FOG );
 	glDisable( GL_LIGHTING );
-	glDisable( GL_DEPTH_TEST );
+	//~ glDisable( GL_DEPTH_TEST );
 	glDisable( GL_CULL_FACE );
 	glColorMaterial( GL_BACK, GL_AMBIENT );
 	glEnable( GL_COLOR_MATERIAL );
 	glDisable( GL_ALPHA_TEST );
 	glEnable( GL_BLEND );
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	gltErrorCheck();
+	GLTERRORCHECK;
 }
 
 void SDLFontRenderer::render( std::string s, float x, float y )
@@ -89,7 +90,7 @@ void SDLFontRenderer::render( std::string s, float x, float y, float height )
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
-	glDisableClientState(GL_COLOR_ARRAY);
+	//~ glDisableClientState(GL_COLOR_ARRAY);
 	
 	setGLflags();
 	

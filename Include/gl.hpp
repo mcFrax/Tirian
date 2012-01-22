@@ -26,6 +26,14 @@ inline void gltErrorCheck()
 		LOG(( "OpenGL error : %s\n", glerrorstring[ err - 0x0500 ] ));
 }
 
+inline void gltErrorCheck( const char * file, int line )
+{
+	for ( GLenum err = glGetError(); err != GL_NO_ERROR; err = glGetError() )
+		LOG(( "%s:%i: OpenGL error : %s\n", file, line, glerrorstring[ err - 0x0500 ] ));
+}
+
+#define GLTERRORCHECK gltErrorCheck( __FILE__, __LINE__ )
+
 class SetOrtho
 {
 	public:
@@ -34,7 +42,7 @@ class SetOrtho
 			glMatrixMode(GL_PROJECTION);
 			glPushMatrix();
 			glLoadIdentity();
-			glOrtho( 0, w, h, 0, -1.0f, 1.0f );
+			glOrtho( 0, w, h, 0, 0.0f, 1.0f );
 			glMatrixMode(GL_MODELVIEW);
 			glPushMatrix();
 			glLoadIdentity();
@@ -56,34 +64,35 @@ class GltSetWindow
 		GltSetWindow( long w, long h )
 			//~ : ortho( w, h )
 		{
+			GLTERRORCHECK;
 			glViewport( 0, 0, w, h );
 			
-			gltErrorCheck();
+			GLTERRORCHECK;
 			
 			glMatrixMode(GL_MODELVIEW);
-			gltErrorCheck();
 			//~ glPushMatrix();
 			glLoadIdentity();
 			glMatrixMode(GL_PROJECTION);
 			//~ glPushMatrix();
 			glLoadIdentity();
-			gltErrorCheck();
-			glOrtho( 0, w, h, 0, -1.0f, 1.0f );
-			gltErrorCheck();
+			GLTERRORCHECK;
+			glOrtho( 0, w, h, 0, 0.0f, 1.0f );
+			GLTERRORCHECK;
 			
 			//temp:
 			glDisable( GL_LIGHTING );
-			glDisable( GL_DEPTH_TEST );
+			//~ glEnable( GL_DEPTH_TEST );
+			//~ glDisable( GL_DEPTH_TEST );
 			glEnable(GL_BLEND);
 			glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 			glEnable( GL_COLOR_MATERIAL );
 			
 			//~ glShadeModel( GL_SMOOTH );
 		
-			glEnable(GL_SCISSOR_TEST);
-			glScissor( 0, 0, w, h );
+			//~ glEnable(GL_SCISSOR_TEST);
+			//~ glScissor( 0, 0, w, h );
 			
-			gltErrorCheck();
+			GLTERRORCHECK;
 		}
 		~GltSetWindow()
 		{

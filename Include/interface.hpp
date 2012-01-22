@@ -8,18 +8,21 @@
  *\brief Narzędzia do komunikacji z systemem i urządzeniami.
  */
 
-class Widget;
+class Engine;
 
 class Mouse
 {
+	friend class Engine;
 	private:
 		static long x, y;
 		static bool Visible;
-		static bool left, middle, right;
-	public:
+		static bool buttonState[6];
 		static void refresh( const long x, const long y ) { Mouse::x = x; Mouse::y = y; }
-		static long getX() __attribute__((pure)) { return x; }
-		static long getY() __attribute__((pure)) { return y; }
+		static void setButton( long button, bool state ) { buttonState[ button ] = state; }
+	public:
+		static long getX()  { return x; }
+		static long getY()  { return y; }
+		static bool button( const long i ) { return buttonState[i]; };
 };
 
 #endif //_INTERFACE_HPP_

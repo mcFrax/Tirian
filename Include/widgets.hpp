@@ -11,9 +11,18 @@
 
 class Label : public Widget
 {
+	public:
+		enum HorizontalTextPos{
+			hpLeft, hpCenter, hpRight
+		};
+		enum VerticalTextPos{
+			vpTop, vpCenter, vpBottom
+		};
 	private:
 		std::string Caption;
 		SDLFontRenderer * Font;
+		VerticalTextPos vertTextPos;
+		HorizontalTextPos horTextPos;
 	protected:
 		void onDraw();
 	public:
@@ -21,6 +30,14 @@ class Label : public Widget
 		
 		const std::string& caption() const { return Caption; }
 		void setCaption( const std::string& c ) { Caption = c; if ( isVisible() ) Engine::Redraw(); }
+		
+		VerticalTextPos getVertTextPos() { return vertTextPos; }
+		HorizontalTextPos getHorTextPos() { return horTextPos; }
+		void setVertTextPos( VerticalTextPos vp ) { vertTextPos = vp; if ( isVisible() ) Engine::Redraw(); }
+		void setHorTextPos( HorizontalTextPos hp ) { horTextPos = hp; if ( isVisible() ) Engine::Redraw(); }
+		
+		SDLFontRenderer * getFont() { return Font; }
+		void setFont( SDLFontRenderer * f ) { Font = f; if ( isVisible() ) Engine::Redraw(); }
 };
 
 class Button : public Widget
@@ -43,12 +60,9 @@ class Button : public Widget
 
 class Image : public Widget
 {
-	public:
-		enum FillType { original, stretch, fill, scale, tile };
 	protected:
 		Texture tex;
 		void onDraw();
-		FillType fillType;
 	public:
 		Image( const std::string& name, Widget* new_parent, long left, long top, long width, long height, const Texture& pat = Texture() );
 		
@@ -82,49 +96,97 @@ class AnimatedImage : public Image
 
 class ScrollBar : public Widget
 {
+	friend class SeekBar;
 	public:
-		enum ScrollBarDirection
+		enum Direction
 		{
 			horizontal,
 			vertical
 		};
 	private:
+		class SeekBar : public Widget
+		{
+			public:
+				void onMotion( const MouseMotionEvent& mme );
+				void onButton( const MouseButtonEvent& mbe );
+				void onDraw();
+				ScrollBar* scroll;
+				long mx, my;
+				SeekBar( const std::string& name, Widget* new_parent, long left, long top, long width, long height, ScrollBar * scr );
+		};
+		class ArrowButton : public Button
+		{
+			protected:
+				void onDraw();
+			public:
+				char dir; //L=0, R=1, U=2, D=3
+				ArrowButton( const std::string& n, Widget* np, long l, long t, long w, long h, char d )
+					:	Button( n, np, l, t, w, h ), dir( d ) { clickRepeat = 1; }
+				
+		};
+		ArrowButton* but1;
+		ArrowButton* but2;
+		Direction dir;
 		Uint32 length;
 		Uint32 pos;
 		Uint32 shortjump;
 		Uint32 longjump;
-		ScrollBarDirection dir;
-		static const Uint32 minSeekSize;
+		SeekBar* seekBar;
+		static const long minSeekbarSize;
+		void seekBarMoved();
+		void setSeekBarSize();
+		void but1cb();
+		void but2cb();
+		static void but1cbW( Widget *, const MouseButtonEvent& );
+		static void but2cbW( Widget *, const MouseButtonEvent& );
 	protected:
+		void onResize();
 		void onDraw();
+		void onClick( const MouseButtonEvent& event );
 	public:
 		static const long defaultWidth;
 		static const long defaultLongJump;
 	public:
-		ScrollBar( const std::string& name, Widget* new_parent, long left, long top, long width, long height, ScrollBarDirection direction, long length, long pos = 0, long shortjump = 1, long longjump = defaultLongJump );
+		ScrollBar( const std::string& name, Widget* new_parent, long left, long top, long width, long height, Direction direction, Uint32 length, Uint32 pos = 0, Uint32 shortjump = 1, Uint32 longjump = defaultLongJump );
+		
+		long clickInterval; //value <= 0 means no repeating, ddefault 0;
 	
 		long getLength() { return length; }
 		long getPosition() { return pos; }
 		long getShortJump() { return shortjump; }
 		long getLongJump() { return longjump; }
-		ScrollBarDirection getDirection() { return dir; }
+		Direction getDirection() { return dir; }
 		
-		void setLength( long l ) { length = l; if ( isVisible() ) Engine::Redraw(); }
-		void setPosition( long p ) { pos = p; if ( isVisible() ) Engine::Redraw(); }
-		void setShortJump( long j ) { shortjump = j; if ( isVisible() ) Engine::Redraw(); }
-		void setLongJump( long j ) { longjump = j; if ( isVisible() ) Engine::Redraw(); }
-		void setDirection( const ScrollBarDirection d ) { dir = d; if ( isVisible() ) Engine::Redraw(); }
+		void setLength( Uint32 l );
+		void setPosition( Uint32 p );
+		void setShortJump( Uint32 j );
+		void setLongJump( Uint32 j );
+		void setDirection( const Direction d );
+		
+		Callback changeCallback;
 };
 
-//~ class List : public ClickableWidget, public KeyboardWidget
-//~ {
-	//~ private:
+class ScrollBox : public Widget
+{
+	private:
+		ScrollBar * vertScroll;
+		ScrollBar * horScroll;
+		static void scrollcb( Widget * );
+	protected:
+		void resizeDockSpace( long, long, long, long ) {}
+		void onDraw();
+		void onResize();
+		void onChildResized( Widget * );
+		void onChildVisibled( Widget * w ) { onChildResized( (w -> isVisible()) ? w : 0 ); }
+	public:
+		ScrollBox( const std::string& name, Widget* new_parent, long left, long top, long width, long height );
+		
+		//~ long getScrollX();
+		//~ long getScrollY();
 		//~ 
-		//~ virtual void Click( const MouseButtonEvent& event );
-	//~ protected:
-	//~ public:
-		//~ List( const std::string& name, DockWidget* new_parent, long left, long top, long width, long height );
-//~ };
+		//~ void setScrollX();
+		//~ void setScrollY();
+};
 
 
 #endif //_WIDGETS_HPP_

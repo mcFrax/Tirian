@@ -1,6 +1,7 @@
 #ifndef _WIDGET_HPP_
 #define _WIDGET_HPP_
 
+#include <map>
 #include <list>
 #include <string>
 
@@ -10,12 +11,10 @@
 #include <interface.hpp>
 #include <gl.hpp>
 
+#include <engine.hpp>
 
-typedef int TAnchors;
 
-class Widget;
 class Window;
-class Engine;
 
 struct MouseMotionEvent;
 struct MouseButtonEvent;
@@ -28,12 +27,29 @@ class Widget
 	//typedefs
 	public:
 		typedef std::list<Widget*> WidgetList;
-		typedef void (*Callback)( Widget& );
-		typedef void (*MotionCallback)( Widget&, const MouseMotionEvent& );
-		typedef void (*ButtonCallback)( Widget&, const MouseButtonEvent& );
-		typedef void (*KeyCallback)( Widget&, const SDL_keysym& );
+		typedef void (*Callback)( Widget* );
+		typedef void (*MotionCallback)( Widget*, const MouseMotionEvent& );
+		typedef void (*ButtonCallback)( Widget*, const MouseButtonEvent& );
+		typedef void (*KeyCallback)( Widget*, const SDL_keysym& );
 		typedef void (*DrawBevelledRectFunc)( const float, const float, const float, const float, const bool );
 		typedef void (*DrawButtonFunc)( const float, const float, const float, const float, const bool, const bool );
+		typedef int Anchors;
+		enum enumAnchors
+		{
+			anLeft = 1,
+			anRight = 2,
+			anTop = 4,
+			anBottom = 8
+		};
+	private:
+		class ClickingEvent : public Engine::Event
+		{
+			private:
+				unsigned long scr;
+			public:
+				ClickingEvent( ulong eT, unsigned long sb ) : Event ( eT ), scr( sb ) {}
+				virtual void execute();
+		};
 	private:
 	//Podstawowe pola:
 		const std::string Name;
@@ -42,10 +58,19 @@ class Widget
 		Widget * Parent;
 		WidgetList::iterator listIt;
 		long x, y, w, h;
+		bool absCoords;
 	public:
-		TAnchors anchors;
-	//Pola do dokowania:
+		Anchors anchors;
+		void * info;	//!< Wolny wskaźnik, można go użyć do czegokolwiek, a najbardziej do przechowania jakiegoś wskaźnika. Początkowo 0.
+	//obsługa identyfikatorów
 	private:
+		unsigned long ID;
+		static unsigned long nextID;
+		static std::map<unsigned long, Widget*> IDmap;
+	public:
+		static Widget* getPointer( unsigned long id );
+	//Pola do dokowania:
+	protected:
 		WidgetList children;
 	protected:
 		//współrzędne pola dokowania
@@ -58,6 +83,7 @@ class Widget
 		bool pressed;
 		bool underPression;
 		Uint32 lastClicked;
+		bool clickRepeat;
 	//Pola statyczne focusów:
 	private:
 		static Widget* keyFocus;
@@ -73,10 +99,6 @@ class Widget
 		static DrawButtonFunc drawButton;
 		static void defaultDrawBevelledRect( const float left, const float top, const float width, const float height, const bool up );
 		static void defaultDrawButton( const float left, const float top, const float width, const float height, const bool enabled, const bool up );
-	//Konstruktory:
-	protected:
-		Widget( const std::string& name );
-		Widget( const std::string& name, Widget* new_parent, long left, long top, long width, long height );
 	//Wenętrzna obsługa eventów i hierarchii:
 	private:
 		void motion( const MouseMotionEvent& event );
@@ -84,11 +106,15 @@ class Widget
 		
 		void key( const SDL_KeyboardEvent& event );
 		
+		void clickEvent( const Uint32 t );
+		
 		void unparent();
 	protected:
+		bool hasAbsCoords() { return absCoords; }
+		void setAbsCoordsOf( Widget* w, bool abs ); //!< Funkcja specjalna, do wywoływania tylko przez rodzica. Ustawia absCoords Widgetu \i w na \i abs.
 		void draw( long l, long t );
 		virtual void resizeDockSpace( long l, long t, long w, long h );	//!< Wywoływane przez resize \u przed zmianą wielkości, argumenty są przekazane bezpośrednio.
-	//Reimplementowalna bsługa eventów:
+	//Reimplementowalna obsługa eventów:
 	protected:
 		virtual void onMotion( const MouseMotionEvent& event ) {}
 		virtual void onButton( const MouseButtonEvent& event ) {}
@@ -101,6 +127,7 @@ class Widget
 		
 		virtual void onKey( const SDL_KeyboardEvent& event ) {}
 		
+		virtual void onMove() {}
 		virtual void onResize() {}
 		
 		virtual void onVisible() {}
@@ -110,6 +137,9 @@ class Widget
 		
 		virtual void onChildResized( Widget* ) {}	//!<Argument 0 oznacza, że dziecko się odczepiło.
 		virtual void onChildVisible( Widget* ) {}
+	//Konstruktory:
+	protected:
+		Widget( const std::string& name, Widget* new_parent, long left, long top, long width, long height );
 	//Metody publiczne
 	public:
 		virtual ~Widget();
@@ -128,10 +158,14 @@ class Widget
 		long absLeft() const;
 		long absTop() const;
 		
+		void move( long left, long right );
 		void resize( long left, long right, long width, long height );
 		
+		unsigned long getID() { return ID; }
 		const std::string& name() const { return Name; }
 		
+	//Callbacki
+	public:
 		MotionCallback motionCallback;
 		MotionCallback mouseEnterCallback;
 		MotionCallback mouseEscapeCallback;
@@ -147,9 +181,6 @@ class Widget
 		//~ KeyCallback keyPressedCallback;
 		
 		Callback resizeCallback;
-		Callback drawCallback;
-		
-		int tag;
 };
 
 class Frame : public Widget
@@ -184,13 +215,6 @@ class Window : protected Widget
 		Callback idleCallback;
 };
 
-enum enumAnchors
-{
-	AN_LEFT = 1,
-	AN_RIGHT = 2,
-	AN_TOP = 4,
-	AN_BOTTOM = 8
-};
 
 struct MouseMotionEvent
 {
@@ -223,16 +247,16 @@ struct MouseButtonEvent
 inline long Widget::absLeft() const
 {
 	long left = 0;
-	for ( const Widget * i = this; i != 0; i = i -> Parent )
-		left += i -> left();
+	for ( const Widget * i = this; i != i -> Parent; i = i -> Parent )
+		left += ( i -> absCoords ) ? i -> left() : i -> left() + i -> dockSpace.offX;
 	return left;
 }
 
 inline long Widget::absTop() const
 {
 	long top = 0;
-	for ( const Widget * i = this; i != 0; i = i -> Parent )
-		top += i -> top();
+	for ( const Widget * i = this; i != i -> Parent; i = i -> Parent )
+		top += ( i -> absCoords ) ? i -> top() : i -> top() + i -> dockSpace.offY;
 	return top;
 }
 

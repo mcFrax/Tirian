@@ -26,6 +26,7 @@
  * Umożliwia ładowanie tekstur, dostęp do części tekstury, usuwanie tekstur z pamięci, rysowanie sprite'ów.
  * Zlicza ilość obiektów odwołujących się do jednej tekstury na zasadzie smart_ptr i automatycznie zwalnia nieużywane tekstury.
  * Udostępnia opcję dynamicznego ładowania - jeżeli tekstura jest załadowana z pliku, można ją wyrzucić z RAMu na czas, w którym nie jest potrzebna.
+ * /warning Z niewyjaśnionych przyczyn występuje segfault przy ładowaniu przynajmniej niektórych indeksowanych png'ów
  */
 class Texture
 {
@@ -61,7 +62,7 @@ class Texture
 		Texture( bool log = 0 );											//!< Pusty konstruktor
 		Texture( int w, int h, GLenum pixelFormat, GLenum textureFormat, int offset, unsigned char * data, bool buildMipmaps = 1, bool log = 0 );	//!< Konstruktor ładujący z bufora pamięci
 		Texture( const char *path, bool buildMipmaps = 1, bool log = 0 );	//!< Konstruktor ładujący z pliku
-		Texture( const Texture &pattern );									//!< Konstruktor kopiujący
+		Texture( const Texture &pattern );					//!< Konstruktor kopiujący
 		Texture( const Texture *tex, unsigned int offsetx, unsigned int offsety, unsigned int width, unsigned int height, bool log = 0 );	//!< Konstruktor fragmentu
 		Texture( SDL_Surface * pattern, GLenum pixelFormat, bool buildMipmaps = 1, bool log = 0 );	//!< Konstruktor ładujący z SDL_Surface
 		~Texture();											//!< Destruktor
@@ -75,18 +76,17 @@ class Texture
 		void loadFromBuffer( int w, int h, GLenum pixelFormat, GLenum textureFormat, int offset, unsigned char * data, bool buildMipmaps = 1 );	//!< Ładuje z bufora pamięci.
 		void loadFromSDL_Surface( SDL_Surface * pattern, GLenum textureFormat, bool buildMipmaps = 1 );	//!< Ładuje z SDL_Surface.
 		void safeBind();													//!< Binduje teksturę bezpiecznie, tj. nigdy nie powoduje segfaulta
-			//!< \see bind() \see fastBind() \see free() \see reload()
 		void bind();														//!< Binduje teksturę, w razie potrzeby uprzednio ją przeładowując. Powoduje segfault jeżeli tekstura jest pusta (tj. counter == 0).
-			//!< \see fastBind() \see safeBind() \see free() \see reload()
 		void fastBind() const { glBindTexture( GL_TEXTURE_2D, counter -> n ); }	//!< Wrapper do glBindTexture. Binduje teksturę szybko, powoduje segfault jeżeli tekstura jest pusta (tj. counter == 0), nie ładuje dynamicznej tekstury.
-			void free() { counter.decreaseNeeders(); }							//!< Zwalnia teksturę, tj. jeżeli tekstura nie jest używana przez żaden obiekt, wyrzuca ją z pamięci operacyjnej. Nie czyści obiektu, teksturę można nadal zbindować przez bind() lub safeBind() oraz załadować ponownie przez reload(). Aby permanentnie wyczyścić teksturę, użyj reset().
-			//!< \see bind() \see fastBind() \see safeBind() \see reload()
+		void free() { counter.decreaseNeeders(); }							//!< Zwalnia teksturę, tj. jeżeli tekstura nie jest używana przez żaden obiekt, wyrzuca ją z pamięci operacyjnej. Nie czyści obiektu, teksturę można nadal zbindować przez bind() lub safeBind() oraz załadować ponownie przez reload(). Aby permanentnie wyczyścić teksturę, użyj reset().
+			/*!< \see bind()
+			 *   \see safeBind() \see reload()
+			 */
 		void reload() { if ( counter && !counter -> n && !counter -> path.empty() ) load(); }	//!< Przeładowuje teksturę z pliku, jeśli została wcześniej zwolniona.
 				
 		void draw( int x, int y ) const;							//!< Rysuje jako sprite'a
 			//!< \warning Jeszcze nie zaimplementowane!
 		
-		const GLuint name() const { return counter ? counter -> n : 0; }
 		//! Pobranie szerokości
 		const unsigned int& width() const { return W; }	//!< \return szerokość tekstury w tekselach
 		//! Pobranie wysokości
@@ -107,8 +107,6 @@ class Texture
 		
 		Texture& operator = ( const Texture &pattern );	//!< Operator podstawienia
 		operator bool() const { return !empty(); }
-		
-		bool operator < ( const Texture& t ) { return counter.tc < t.counter.tc; }
 };
 
 inline void Texture::TexCounter::decreaseNeeders()
