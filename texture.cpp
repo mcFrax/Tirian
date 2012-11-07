@@ -323,7 +323,8 @@ void Texture::load()
 {
 	TRY
 		SDL_Surface * img = IMG_Load( counter -> path.c_str() );
-		if ( !img ) throw std::runtime_error( "Couldn't read file" );
+        if ( !img )
+            throw std::runtime_error( (std::string("IMG_Load (\"")+=counter -> path.c_str()) +="\") failed" );
 		loadFromSDL_Surface( img, GL_RGBA, counter -> mipmaps );
 		SDL_FreeSurface( img );
 	CATCH_LOAD( "texture", counter -> path );
