@@ -7,9 +7,9 @@ IDIR = Include/
 OBJ = $(OBJDIR)texture.o $(OBJDIR)fontrenderer.o $(OBJDIR)mono_fontrenderer.o $(OBJDIR)widget.o $(OBJDIR)interface.o $(OBJDIR)engine.o $(OBJDIR)widgets.o
 DEP = $(IDIR)gl.hpp $(IDIR)logging.hpp $(IDIR)except.hpp 
 
-everything: all Docs
-
 all: libTirian.a
+
+everything: all Docs
 
 clean:
 	rm -f $(OBJDIR)*.o
