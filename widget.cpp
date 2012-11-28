@@ -257,6 +257,7 @@ void Widget::clickEvent( const Uint32 t )
 
 void Widget::key( const SDL_KeyboardEvent& e )
 {
+	onKey(e);
 	if ( e.state == SDL_PRESSED ){
 		if ( keyDownCallback ) keyDownCallback( this, e.keysym );
 	} else {
