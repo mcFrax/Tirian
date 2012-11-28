@@ -15,6 +15,7 @@ std::priority_queue<Engine::Event*, std::vector<Engine::Event*>, Engine::ECmp> E
 FontRenderer * Engine::defFont = 0;
 Uint32 Engine::videoModeFlags = 0;
 const SDL_VideoInfo* Engine::video = 0;
+pthread_mutex_t Engine::event_queue_mutex;
 
 const char Engine::TirianVersion[] = "0.1.2 alpha";
 const char Engine::DefaultIconPath[] = "/home/frax/Programowanie/Tirian/Tirian.png";
@@ -140,6 +141,8 @@ Engine::Engine( int argc, char** argv, Uint16 width, Uint16 height, const char* 
 		
 		window_ptr = new Window( W, H );
 		
+		pthread_mutex_init(&event_queue_mutex, 0);
+		
 		LOG(( "Initialization complete.\n" ));
 	CATCH
 }
@@ -154,7 +157,16 @@ Engine::~Engine()
 	delete window_ptr;
 	delete defFont;
 	
+	pthread_mutex_destroy(&event_queue_mutex);
+	
 	LOG(( "Engine killed.\n" ));
+}
+
+void Engine::pushEvent( Engine::Event* ptr )
+{
+	pthread_mutex_lock(&event_queue_mutex);
+	eventQueue.push( ptr );
+	pthread_mutex_unlock(&event_queue_mutex);
 }
 
 void Engine::setVideoModeFlags( Uint32 flags )
@@ -232,12 +244,14 @@ void Engine::MainLoop()
 			}
 			
 			Uint32 t = SDL_GetTicks();
+			pthread_mutex_lock(&event_queue_mutex);
 			while ( !eventQueue.empty() && eventQueue.top() -> executionTime <= t ){
 				eventQueue.top() -> execute();
 				#warning delete eventQueue.top(); ( powinien być shared_ptr )
 				delete eventQueue.top();
 				eventQueue.pop();
 			}
+			pthread_mutex_unlock(&event_queue_mutex);
 			
 			if ( redraw ){
 				redraw = 0;

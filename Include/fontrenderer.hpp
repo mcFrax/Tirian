@@ -25,6 +25,7 @@ class FontRenderer
 		float color[4];
 		FontRenderer();
 	public:
+		virtual ~FontRenderer() {}
 		virtual void set( TTF_Font * _font, const bool useMipmaps,
                 const bool blending ) = 0;
 		void setBlending( bool blending ) { blend = blending; }

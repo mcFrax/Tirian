@@ -8,6 +8,7 @@
 #include <gl.hpp>
 #include <queue>
 #include <memory>
+#include <pthread.h>
 
 class Widget;
 class Frame;
@@ -50,6 +51,7 @@ class Engine
 		static std::priority_queue<Event*, std::vector<Event*>, ECmp> eventQueue;
 		static Uint32 videoModeFlags;
 		static const SDL_VideoInfo* video;
+		static pthread_mutex_t event_queue_mutex;
 	public:
 		//static SDLFontRenderer * defFont;
 		static FontRenderer * defFont;
@@ -75,7 +77,7 @@ class Engine
 		
 		void MainLoop();
 		
-		static void pushEvent( Event* ptr ) { eventQueue.push( ptr ); }
+		static void pushEvent( Event* ptr );
 		
 		static void Quit() { quit = 1; }
 		static bool isQuiting() { return quit; }
